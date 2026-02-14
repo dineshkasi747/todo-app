@@ -1,29 +1,17 @@
 import express from 'express';
-import passport from 'passport';
-import { googleAuthCallback, getCurrentUser, logout } from '../controllers/authController.js';
+import { 
+  googleAuthAndroid,
+  getCurrentUser, 
+  logout 
+} from '../controllers/authController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-// @route   GET /api/auth/google
-// @desc    Initiate Google OAuth
+// @route   POST /api/auth/google/android
+// @desc    Google Sign-In for Android
 // @access  Public
-router.get(
-  '/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
-
-// @route   GET /api/auth/google/callback
-// @desc    Google OAuth callback
-// @access  Public
-router.get(
-  '/google/callback',
-  passport.authenticate('google', { 
-    failureRedirect: `${process.env.CLIENT_URL}/auth/failure`,
-    session: false 
-  }),
-  googleAuthCallback
-);
+router.post('/google/android', googleAuthAndroid);
 
 // @route   GET /api/auth/me
 // @desc    Get current user
