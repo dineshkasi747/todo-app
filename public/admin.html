@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App - Admin Notification Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: scale(1.02);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert.show {
+            display: block;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .users-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .user-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: #f5f5f5;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 Todo App Admin Panel</h1>
+            <p>Send push notifications to your users</p>
+        </div>
+
+        <div class="card">
+            <div id="statsContainer" class="stats"></div>
+
+            <div id="alert" class="alert"></div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('all')">
+                    📢 Send to All Users
+                </button>
+                <button class="tab" onclick="switchTab('specific')">
+                    👤 Send to Specific User
+                </button>
+            </div>
+
+            <!-- Send to All Users -->
+            <div id="tab-all" class="tab-content active">
+                <form id="form-all" onsubmit="sendToAll(event)">
+                    <div class="form-group">
+                        <label for="title-all">📝 Notification Title</label>
+                        <input 
+                            type="text" 
+                            id="title-all" 
+                            placeholder="e.g., New Feature Available!" 
+                            required
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label for="body-all">💬 Notification Message</label>
+                        <textarea 
+                            id="body-all" 
+                            placeholder="e.g., Check out our new dark mode feature!" 
+                            required
+                        ></textarea>
+                    </div>
+                    <button type="submit" class="btn" id="btn-all">
+                        📤 Send to All Users
+                    </button>
+                </form>
+            </div>
+
+            <!-- Send to Specific User -->
+            <div id="tab-specific" class="tab-content">
+                <form id="form-specific" onsubmit="sendToSpecific(event)">
+                    <div class="form-group">
+                        <label for="user-select">👤 Select User</label>
+                        <select id="user-select" required>
+                            <option value="">Loading users...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="title-specific">📝 Notification Title</label>
+                        <input 
+                            type="text" 
+                            id="title-specific" 
+                            placeholder="e.g., Personal Message" 
+                            required
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label for="body-specific">💬 Notification Message</label>
+                        <textarea 
+                            id="body-specific" 
+                            placeholder="e.g., Hello! We have a special offer for you..." 
+                            required
+                        ></textarea>
+                    </div>
+                    <button type="submit" class="btn" id="btn-specific">
+                        📤 Send to Selected User
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get API base URL (change this to your backend URL)
+        const API_BASE = window.location.origin;
+
+        // Load users on page load
+        loadUsers();
+        loadStats();
+
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/notifications/users`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const totalUsers = data.count;
+                    const usersWithTokens = data.users.filter(u => u.hasToken).length;
+
+                    document.getElementById('statsContainer').innerHTML = `
+                        <div class="stat-card">
+                            <h3>${totalUsers}</h3>
+                            <p>Total Users</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>${usersWithTokens}</h3>
+                            <p>Users with App</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_BASE}/api/notifications/users`);
+                const data = await response.json();
+
+                const select = document.getElementById('user-select');
+                
+                if (data.success) {
+                    select.innerHTML = '<option value="">Select a user...</option>';
+                    
+                    data.users.forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user.id;
+                        option.textContent = `${user.name} (${user.email})${user.hasToken ? '' : ' - No app'}`;
+                        option.disabled = !user.hasToken;
+                        select.appendChild(option);
+                    });
+                } else {
+                    select.innerHTML = '<option value="">Error loading users</option>';
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('user-select').innerHTML = '<option value="">Error loading users</option>';
+            }
+        }
+
+        async function sendToAll(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('btn-all');
+            btn.disabled = true;
+            btn.textContent = '⏳ Sending...';
+
+            const title = document.getElementById('title-all').value;
+            const body = document.getElementById('body-all').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/notifications/send-all`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, body })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('success', `✅ Notification sent to ${data.totalUsers} users!`);
+                    document.getElementById('form-all').reset();
+                } else {
+                    showAlert('error', `❌ Error: ${data.message}`);
+                }
+            } catch (error) {
+                showAlert('error', `❌ Network error: ${error.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📤 Send to All Users';
+            }
+        }
+
+        async function sendToSpecific(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('btn-specific');
+            btn.disabled = true;
+            btn.textContent = '⏳ Sending...';
+
+            const userId = document.getElementById('user-select').value;
+            const title = document.getElementById('title-specific').value;
+            const body = document.getElementById('body-specific').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/notifications/send-user`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, title, body })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('success', `✅ Notification sent to ${data.user.name}!`);
+                    document.getElementById('form-specific').reset();
+                } else {
+                    showAlert('error', `❌ Error: ${data.message}`);
+                }
+            } catch (error) {
+                showAlert('error', `❌ Network error: ${error.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📤 Send to Selected User';
+            }
+        }
+
+        function showAlert(type, message) {
+            const alert = document.getElementById('alert');
+            alert.className = `alert ${type} show`;
+            alert.textContent = message;
+
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
