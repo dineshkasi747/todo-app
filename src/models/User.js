@@ -4,14 +4,13 @@ const userSchema = new mongoose.Schema(
   {
     googleId: {
       type: String,
+      required: true,
       unique: true,
-      sparse: true,
     },
     email: {
       type: String,
       required: true,
       unique: true,
-      lowercase: true,
     },
     name: {
       type: String,
@@ -19,7 +18,9 @@ const userSchema = new mongoose.Schema(
     },
     avatar: {
       type: String,
-      default: '',
+    },
+    fcmToken: {
+      type: String,
     },
   },
   {
