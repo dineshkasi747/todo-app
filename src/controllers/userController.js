@@ -42,3 +42,4 @@ export const updateFCMToken = async (req, res) => {
     });
   }
 };
+
